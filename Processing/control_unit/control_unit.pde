@@ -11,13 +11,13 @@
  run this command from the Raspberry Pi command line to execute:
  processing-java --sketch=/home/pi/Documents/USM/LightHappenings/Processing/control_unit/ --force --run
  *****************************************************************************
-
+ 
  Written by Phillip David Stearns 2019
  Processing 3.4
  No lincenses and No warranties are granted.
  Reuse this code at your own peril.
-
-//////////////////////////////////////////*/
+ 
+ //////////////////////////////////////////*/
 //Libraries
 
 import processing.net.*;
@@ -32,7 +32,7 @@ Zone[] zones;
 
 //********************
 // ENABLE FOR I2C
-boolean sendI2c=false;
+boolean I2CEnable=false;
 //********************
 
 boolean verbose=true;
@@ -131,6 +131,9 @@ void draw() {
 
   background(0);
 
+  fill(255);
+  text(frameRate, 20, 20);
+
   //for (int i = 0; i < zone_count; i++) {
   //  zones[i].drawCrosshairs();
   //}
@@ -145,21 +148,30 @@ void draw() {
 // network()
 
 void network() {
+
   // Get the next available client
   Client client = server.available();
+
   // If the client is not null, and says something, display what it said
   if (client !=null) {
+
     String message = client.readString();
     // check to see if we're setting the mode
-    if(modeValid(message)){
+
+    if (modeValid(message)) {
       setMode(message);
     } else {
       // if not, check to see if setting speed
       String[] messages = split(message, ':');
-      if(messages[0].equals("SPEED")){
+      if (messages[0].equals("SPEED")) {
         speed = Float.parseFloat(messages[1]);
         //constrain speed
-        speed=max(speedMin,min(speedMax,.1));
+        speed=max(speedMin, min(speed, speedMax));
+        //update Zone rates with new speed
+        for (int i = 0; i < zone_count; i++) {
+          zones[i].rate=speed;
+        }
+        
         verbose("speed set to: "+speed);
       } else {
       }

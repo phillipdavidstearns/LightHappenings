@@ -18,6 +18,7 @@ class Zone {
   float rate=0;
   float ease=.125;
   long seed=int(random(pow(2, 32)));
+  float noiseScale=1500;
   String mode="RANDOM";
 
   Zone(int _x, int _y, int _ch, int _id) {
@@ -98,7 +99,7 @@ class Zone {
     // update brightness value and constraing between 0-1
     brightness+=ease(brightness, bTarget, ease);
     // send brightness down I2C wire
-    sendI2C(byte(int(brightness*255)));
+    if(I2CEnable)sendI2C(byte(int(brightness*255)));
   }
 
 
@@ -120,34 +121,18 @@ class Zone {
   }
 
   float cycle() {
-    // wrap angle to constrain between 0-1
-    if ( angle > 1) {
-      angle = angle-1;
-    } else if (angle < 0) {
-      angle = 1+angle;
-    }
-
-    //angle = max(0, (min(angle, 1)));
-    float cycleVal =  0.5 * sin(2*PI*angle) + 0.5;
-    angle+=rate;
-    return cycleVal;
+    incAngle(rate);
+    return 0.5 * sin(2*PI*angle) + 0.5;
   }
 
   float breathe() {
-    if (angle > 1) angle = 0;
-    angle = max(0, (min(angle, 1)));
-    float breatheVal = pow(sin(2*PI*angle), 2);
-    angle+=rate;
-    return breatheVal;
+    incAngle(rate);
+    return pow(sin(2*PI*angle), 2);
   }
 
   float perlin() {
-    if (angle > 1) angle = 0;
-    angle = max(0, (min(angle, 1)));
-    noiseSeed(seed);
-    float perlinVal = 2*noise(500*sin(2*PI*angle))-0.5;
-    angle+=rate;
-    return perlinVal;
+    incAngle(rate/noiseScale);
+    return 2*noise(noiseScale*sin(2*PI*angle))-0.5;
   }
 
   float interactive() {
@@ -155,6 +140,20 @@ class Zone {
     float dist = PVector.dist(pos, mouse);
     float range = grid_width/grid_unitsX;
     return 1/pow(dist/range, 2);
+  }
+  
+  void incAngle(float _rate){
+    
+    //increment angle by rate
+    angle+=_rate;
+    
+    //wrap to constrain to 0-1
+    if ( angle > 1) {
+      angle = angle-1;
+    } else if (angle < 0) {
+      angle = 1+angle;
+    }
+    
   }
 
   void setMode(String _mode) {
@@ -168,9 +167,10 @@ class Zone {
       break;
       
     case "RANDOM":
+      noiseSeed(seed);
       noiseDetail(3, .75);
       angle=(random(1));
-      rate=speed/500;
+      rate=speed;
       break;
 
     case "CYCLE":
