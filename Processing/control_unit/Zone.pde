@@ -12,7 +12,7 @@ class Zone {
   float brightness=0; // value should be from 0-1
   float maxBrightness;
   float minBrightness;
-  float cycle; // 0 - 1
+  float angle; // 0 - 1
   float rate=0;
   float ease=.125;
   long seed=int(random(pow(2, 32)));
@@ -47,9 +47,9 @@ class Zone {
       // display channel id
       fill(255-brightness*255);
       textAlign(CENTER, CENTER);
-      text(ch_id, pos.x, pos.y-r/2); 
+      text(ch_id, pos.x, pos.y-r/2);
     }
-    if (showBrightness){
+    if (showBrightness) {
       //display Brightness
       fill(255-brightness*255);
       textAlign(CENTER, CENTER);
@@ -64,25 +64,19 @@ class Zone {
     switch (mode) {
     case "CYCLE":
       bTarget = cycle();
-      cycle+=rate;
       break;
     case "BREATHE":
       bTarget = breathe();
-      cycle+=rate;
       break;
     case "RANDOM":
       bTarget = cycle();
-      cycle+=rate;
       break;
     case "WAVES":
       break;
     case "PARTICLES":
       break;
     case "INTERACTIVE":
-      PVector mouse = new PVector(mouseX, mouseY);
-      float dist = PVector.dist(pos, mouse);
-      float range = grid_width/grid_unitsX;
-      brightness=1/pow(dist/range, 2);
+      bTarget = interactive();
       break;
     case "MANUAL":
       break;
@@ -97,7 +91,6 @@ class Zone {
   }
 
   void sendI2C(byte _val) {
-
     i2c.beginTransmission(i2c_id);
     i2c.write(_val);
     try {  
@@ -112,20 +105,33 @@ class Zone {
   }
 
   float cycle() {
-    if (cycle > 1) cycle = 0;
-    cycle = max(0, (min(cycle, 1)));
-    return 0.5 * sin(2*PI*cycle) + 0.5;
+    if ( angle > 1) angle = 0;
+    angle = max(0, (min(angle, 1)));
+    float cycleVal =  0.5 * sin(2*PI*angle) + 0.5;
+    angle+=rate;
+    return cycleVal;
   }
 
   float breathe() {
-    if (cycle > 1) cycle = 0;
-    cycle = max(0, (min(cycle, 1)));
-    return pow(sin(2*PI*cycle), 2);
+    if (angle > 1) angle = 0;
+    angle = max(0, (min(angle, 1)));
+    float breatheVal = pow(sin(2*PI*angle),2);
+    angle+=rate;
+    return breatheVal;
   }
 
   float perlin() {
-    if (cycle > 1) cycle = 0;
-    cycle = max(0, (min(cycle, 1)));
-    return 0.5 * sin(2*PI*cycle) + 0.5;
+    if (angle > 1) angle = 0;
+    angle = max(0, (min(angle, 1)));
+    float perlinVal = pow(sin(2*PI*angle),2);
+    angle+=rate;
+    return perlinVal;
+  }
+
+  float interactive() {
+    PVector mouse = new PVector(mouseX, mouseY);
+    float dist = PVector.dist(pos, mouse);
+    float range = grid_width/grid_unitsX;
+    return 1/pow(dist/range, 2);
   }
 }

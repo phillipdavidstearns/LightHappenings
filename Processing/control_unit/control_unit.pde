@@ -31,7 +31,7 @@ int zone_count = 24;
 
 // Misc global variables
 float speed = .001; // speed of animaiton
-float cycle_offset; // used to determin the frequency offset of the CYCLE routine
+float freq_offset; // used to determin the frequency offset of the CYCLE routine
 String mode = "BREATHE" ; // animation routine
 
 /*
@@ -66,7 +66,7 @@ void setup() {
   frameRate(30);
   noSmooth();
 
-  cycle_offset=speed*.1;
+  freq_offset=speed*.1;
 
   // initialize server
   server = new Server(this, 31337); // 
@@ -156,7 +156,7 @@ void setMode(String _mode) {
     mode = _mode;
     verbose("Mode: "+mode);
     for (int i = 0; i < zone_count; i++) {
-      zones[i].cycle=0;
+      zones[i].angle=0;
       zones[i].rate=speed;
     }
     break;
@@ -174,7 +174,7 @@ void setMode(String _mode) {
     mode=_mode;
     verbose("Mode: "+mode);
     for (int i = 0; i < zone_count; i++) {
-      zones[i].rate=speed+(cycle_offset*i);
+      zones[i].rate=speed+(freq_offset*i);
     }
     break;
     
