@@ -3,11 +3,49 @@
 
 void initGUI() {
 
+  int GUIoriginX=40;
+  int GUIoriginY=40;
+
+  int buttonWidth=40;
+  int buttonHeight=40;
+
+  int vSliderWidth=40;
+  int vSliderHeight=300;
+
+  int speedOffsetX=0;
+  int speedOffsetY=0;
+
+  int manualOffsetX=160;
+  int manualOffsetY=0;
+
+  int modeOffsetX=60;
+  int modeOffsetY=0;
+
   GUI = new ControlP5(this);
 
-  mode = GUI.addRadioButton("mode selector")
-    .setPosition(radioX, radioY)
-    .setSize(40, 40)
+  speedSlider = GUI.addSlider("speed slider")
+    .setPosition(GUIoriginX+speedOffsetX, GUIoriginY+speedOffsetY)
+    .setSize(vSliderWidth, vSliderHeight)
+    .setRange(.0025, .025) // values can range from big to small as well
+    .setValue(.005)
+    ;
+
+  manualSlider = GUI.addSlider("manual slider")
+    .setPosition(GUIoriginX+manualOffsetX, GUIoriginY+manualOffsetY)
+    .setSize(vSliderWidth, vSliderHeight)
+    .setRange(0, 1) // values can range from big to small as well
+    .setValue(0)
+    ;
+
+  GUI.getController("manual slider")
+    .getValueLabel()
+    .align(ControlP5.CENTER, ControlP5.TOP_OUTSIDE)
+    .setPaddingX(0)
+    ;
+
+  modeSelect = GUI.addRadioButton("mode selector")
+    .setPosition(GUIoriginX+modeOffsetX, GUIoriginY+modeOffsetY)
+    .setSize(buttonWidth, buttonHeight)
     .setColorForeground(color(120))
     .setColorActive(color(255))
     .setColorLabel(color(255))
@@ -20,47 +58,44 @@ void initGUI() {
     .addItem("WAVES", 5)
     .addItem("MANUAL", 6)
     ;
-
-  // set style
-  for (Toggle t : mode.getItems()) {
-    t.getCaptionLabel().setColorBackground(color(0));
-    t.getCaptionLabel().getStyle().moveMargin(0, 0, 0, 0);
-    t.getCaptionLabel().getStyle().movePadding(0, 0, 0, 0);
-    t.getCaptionLabel().getStyle().backgroundWidth = 0;
-    t.getCaptionLabel().getStyle().backgroundHeight = 0;
-  }
 }
 
 //////////////////////////////////////////////////////
 //
 
 void controlEvent(ControlEvent theEvent) {
-  if (theEvent.isFrom(mode)) {
 
-
+  if (theEvent.isFrom(modeSelect)) {
     switch(int(theEvent.getValue())) {
     case 1:
-      client.write("BREATHE");
+      message="BREATHE";
       break;
     case 2:
-      client.write("CYCLE");
+      message="CYCLE";
       break;
     case 3:
-      client.write("RANDOM");
+      message="RANDOM";
       break;
     case 4:
-      client.write("PARTICLES");
+      message="PARTICLES";
       break;
     case 5:
-      client.write("WAVES");
+      message="WAVES";
       break;
     case 6:
-      client.write("MANUAL");
+      message="MANUAL";
       break;
     }
   }
-}
-
-void radioButton(int a) {
-  println("a radio Button event: "+a);
+  
+  if (theEvent.isFrom(speedSlider)) {
+    message="SPEED:"+theEvent.getValue();
+  }
+  
+  if (theEvent.isFrom(manualSlider)) {
+    message="LEVEL:"+theEvent.getValue();
+  }
+  
+  
+  
 }

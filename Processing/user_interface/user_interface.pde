@@ -11,9 +11,10 @@ int port = 31337; // RPi is listening on this port
 
 int attempts=0;
 
-int radioX = 20, radioY = 20;
+String message;
 
-RadioButton mode;
+RadioButton modeSelect;
+Slider speedSlider, manualSlider;
 
 //////////////////////////////////////////////////////
 // setup()
@@ -25,13 +26,14 @@ void setup() {
   background(0);
 
   // initialize the client
-  initClient();
+  //initClient();
 
   // print the IP address
-  println(client.ip());
+  //println(client.ip());
 
   // GUI initialization
   initGUI();
+  
 }
 
 //////////////////////////////////////////////////////
@@ -41,17 +43,21 @@ void draw() {
 
   background(0);
 
-  if (!client.active() && attempts <=5) {
-    if ( attempts == 5 ) {
-      println("Unable to establish connection with server.");
-    }
-    attempts++;
-  }
+  //if (!client.active() && attempts <=5) {
+  //  if ( attempts == 5 ) {
+  //    println("Unable to establish connection with server.");
+  //  }
+  //  attempts++;
+  //}
+ 
+  //if (client.active()){
+  //  client.write(message);
+  //}
 
-  // Server can talk back.
-  if (client.available() > 0) {
-    println(client.readString());
-  }
+  //// Server can talk back.
+  //if (client.available() > 0) {
+  //  println(client.readString());
+  //}
 }
 
 //////////////////////////////////////////////////////

@@ -5,43 +5,43 @@ void keyPressed() {
   if (key != CODED) {
     switch (key) {
     case '1':
-      client.write("SPEED:0.001");
+      message="SPEED:0.001";
       break;
     case '2':
-      client.write("SPEED:0.002");
+      message="SPEED:0.002";
       break;
     case '3':
-      client.write("SPEED:0.004");
+      message="SPEED:0.004";
       break;
     case '4':
-      client.write("SPEED:0.008");
+      message="SPEED:0.008";
       break;
     case '5':
-      client.write("SPEED:0.016");
+      message="SPEED:0.016";
       break;
     case '6':
-      client.write("SPEED:0.032");
+      message="SPEED:0.032";
       break;
     case 'B':
-      client.write("BREATHE");
+      message="BREATHE";
       break;
     case 'R':
-      client.write("RANDOM");
+      message="RANDOM";
       break;
     case 'C':
-      client.write("CYCLE");
+      message="CYCLE";
       break;
     case 'W':
-      client.write("WAVES");
+      message="WAVES";
       break;
     case 'P':
-      client.write("PARTICLES");
+      message="PARTICLES";
       break;
     case 'I':
-      client.write("INTERACTIVE");
+      message="INTERACTIVE";
       break;
     case 'M':
-      client.write("MANUAL");
+      message="MANUAL";
       break;
     case 'K':
       attempts=0;
