@@ -7,7 +7,17 @@
  2. Process those commands and execute light control routines
  3. Issue brightness settings to ATtiny85 MCUs over I2C
  
- //////////////////////////////////////////*/
+ *****************************************************************************
+ run this command from the Raspberry Pi command line to execute:
+ processing-java --sketch=/home/pi/Documents/USM/LightHappenings/Processing/control_unit/ --force --run
+ *****************************************************************************
+
+ Written by Phillip David Stearns 2019
+ Processing 3.4
+ No lincenses and No warranties are granted.
+ Reuse this code at your own peril.
+
+//////////////////////////////////////////*/
 //Libraries
 
 import processing.net.*;
@@ -19,6 +29,11 @@ import processing.io.*;
 I2C i2c;
 
 Zone[] zones;
+
+//********************
+// ENABLE FOR I2C
+boolean sendI2c=false;
+//********************
 
 boolean verbose=true;
 boolean showID=false;
@@ -94,7 +109,7 @@ void setup() {
   setMode("RANDOM");
 
   //GPIO initialization for RPi
-  GPIO.pinMode(4, GPIO.OUTPUT); // GPIO 4 is physical header pin 7
+  //GPIO.pinMode(4, GPIO.OUTPUT); // GPIO 4 is physical header pin 7
 }
 
 ///////////////////////////////////////////
@@ -102,9 +117,9 @@ void setup() {
 // call if the arduinos need to be reset
 // not yet implemented in hardware!!!
 
-void resetDimmers() {
-  GPIO.digitalWrite(4, 0);
-}
+//void resetDimmers() {
+//  GPIO.digitalWrite(4, 0);
+//}
 
 ///////////////////////////////////////////
 // draw()
