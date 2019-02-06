@@ -7,7 +7,7 @@
  2. Process those commands and execute light control routines
  3. Issue brightness settings to ATtiny85 MCUs over I2C
  
-//////////////////////////////////////////*/
+ //////////////////////////////////////////*/
 //Libraries
 
 import processing.net.*;
@@ -21,8 +21,8 @@ I2C i2c;
 Zone[] zones;
 
 boolean verbose=true;
-boolean showID=true;
-boolean showBrightness=true;
+boolean showID=false;
+boolean showBrightness=false;
 
 // I2C setup variables
 int i2c_addr_start = 10;
@@ -30,9 +30,10 @@ int zone_count = 24;
 
 
 // Misc global variables
-float speed = .001; // speed of animaiton
+float speed = .005; // speed of animaiton
+float speedMin=.0005;
+float speedMax=.05;
 float freq_offset; // used to determin the frequency offset of the CYCLE routine
-String mode = "BREATHE" ; // animation routine
 
 /*
   Supported modes/animation routines:
@@ -61,7 +62,7 @@ Server server;
 // Setup
 
 void setup() {
-  size(600, 200);
+  size(400, 150);
   background(0); 
   frameRate(30);
   noSmooth();
@@ -86,8 +87,11 @@ void setup() {
   zones = new Zone[zone_count];
   for (int i = 0; i < zone_count; i++) {
     TableRow row = grid.getRow(i);
-    zones[i]=new Zone(parseInt(row.getString(0)), parseInt(row.getString(1)), i, i+i2c_addr_start);
+    zones[i]=new Zone(parseInt(row.getString(0)), parseInt(row.getString(1)), i+1, i+i2c_addr_start);
   }
+
+  //initialize the animation
+  setMode("RANDOM");
 
   //GPIO initialization for RPi
   GPIO.pinMode(4, GPIO.OUTPUT); // GPIO 4 is physical header pin 7
@@ -112,9 +116,9 @@ void draw() {
 
   background(0);
 
-  for (int i = 0; i < zone_count; i++) {
-    zones[i].drawCrosshairs();
-  }
+  //for (int i = 0; i < zone_count; i++) {
+  //  zones[i].drawCrosshairs();
+  //}
 
   for (int i = 0; i < zone_count; i++) {
     zones[i].render();
@@ -131,75 +135,49 @@ void network() {
   // If the client is not null, and says something, display what it said
   if (client !=null) {
     String message = client.readString();
-    if ( message != null && (
-      message.equals("BREATHE") ||
-      message.equals("RANDOM") ||
-      message.equals("CYCLE") ||
-      message.equals("WAVES") ||
-      message.equals("INTERACTIVE") ||
-      message.equals("PARTICLES") ||
-      message.equals("MANUAL")
-      )) {
+    // check to see if we're setting the mode
+    if(modeValid(message)){
       setMode(message);
+    } else {
+      // if not, check to see if setting speed
+      String[] messages = split(message, ':');
+      if(messages[0].equals("SPEED")){
+        speed = Float.parseFloat(messages[1]);
+        //constrain speed
+        speed=max(speedMin,min(speedMax,.1));
+        verbose("speed set to: "+speed);
+      } else {
+      }
     }
-    println(client.ip() + ": " + message);
-    client.write("Mode set to: "+message);
   }
+}
+
+///////////////////////////////////////////
+// modeValid()
+boolean modeValid(String _message) {
+  return (
+    _message != null && (
+    _message.equals("BREATHE") ||
+    _message.equals("RANDOM") ||
+    _message.equals("CYCLE") ||
+    _message.equals("WAVES") ||
+    _message.equals("INTERACTIVE") ||
+    _message.equals("PARTICLES") ||
+    _message.equals("MANUAL")
+    ));
 }
 
 ///////////////////////////////////////////
 // setMode()
 
 void setMode(String _mode) {
-  switch(_mode) {
-  case "BREATHE":
-    mode = _mode;
-    verbose("Mode: "+mode);
+  if (modeValid(_mode)) {
+    verbose("Setting mode to: "+_mode);
     for (int i = 0; i < zone_count; i++) {
-      zones[i].angle=0;
-      zones[i].rate=speed;
+      zones[i].setMode(_mode);
     }
-    break;
-
-  case "RANDOM":
-    mode = _mode;
-    verbose("Mode: "+mode);
-    for (int i = 0; i < zone_count; i++) {
-      randomSeed(zones[i].seed);
-      zones[i].rate=speed+random(speed);
-    }
-    break;
-
-  case "CYCLE":
-    mode=_mode;
-    verbose("Mode: "+mode);
-    for (int i = 0; i < zone_count; i++) {
-      zones[i].rate=speed+(freq_offset*i);
-    }
-    break;
-    
-  case "INTERACTIVE":
-    mode=_mode;
-    verbose("Mode: "+mode);
-    break;
-    
-  case "MANUAL":
-    mode=_mode;
-    verbose("Mode: "+mode);
-    break;
-    
-  case "WAVES":
-    mode=_mode;
-    verbose("Mode: "+mode);
-    break;
-    
-  case "PARTICLES":
-    mode=_mode;
-    verbose("Mode: "+mode);
-    break;
-    
-  default:
-    break;
+  } else {
+    verbose("Invalid mode: "+_mode);
   }
 }
 
