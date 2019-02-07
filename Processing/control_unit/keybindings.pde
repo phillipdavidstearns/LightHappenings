@@ -4,25 +4,25 @@
 void keyPressed() {
   if (key != CODED) {
     switch (key) {
-    case 'B':
+    case 'b':
       setMode("BREATHE");
       break;
-    case 'R':
+    case 'r':
       setMode("RANDOM");
       break;
-    case 'C':
+    case 'c':
       setMode("CYCLE");
       break;
-    case 'W':
+    case 'w':
       setMode("WAVES");
       break;
-    case 'P':
+    case 'p':
       setMode("PARTICLES");
       break;
-    case 'I':
+    case 'i':
       setMode("INTERACTIVE");
       break;
-    case 'M':
+    case 'm':
       setMode("MANUAL");
       break;
     default:

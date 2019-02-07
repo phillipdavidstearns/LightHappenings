@@ -15,8 +15,9 @@ class Zone {
   float maxBrightness;
   float minBrightness;
   float angle; // 0 - 1
+  float manual; // manual brightness value
   float rate=0;
-  float ease=.125;
+  float ease=.25;
   long seed=int(random(pow(2, 32)));
   float noiseScale=1500;
   String mode="RANDOM";
@@ -87,6 +88,7 @@ class Zone {
       bTarget = interactive();
       break;
     case "MANUAL":
+    bTarget = manual;
       break;
     default:
       println("Unrecognized mode: "+mode);

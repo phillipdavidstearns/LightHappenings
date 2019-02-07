@@ -13,7 +13,7 @@
  *****************************************************************************
  
  Written by Phillip David Stearns 2019
- Processing 3.4
+ Processing 3.5.2
  No lincenses and No warranties are granted.
  Reuse this code at your own peril.
  
@@ -46,9 +46,10 @@ int zone_count = 24;
 
 // Misc global variables
 float speed = .005; // speed of animaiton
-float speedMin=.0005;
-float speedMax=.05;
+float speedMin=.0025;
+float speedMax=.025;
 float freq_offset; // used to determin the frequency offset of the CYCLE routine
+float[] manual;
 
 /*
   Supported modes/animation routines:
@@ -73,6 +74,10 @@ Table grid; // used to map the zones
 
 Server server;
 
+ArrayList<Lamp> lamps;
+ArrayList<Force> Forces;
+ArrayList<Wave> Waves;
+
 ///////////////////////////////////////////
 // Setup
 
@@ -85,7 +90,7 @@ void setup() {
   freq_offset=speed*.1;
 
   // initialize server
-  server = new Server(this, 31337); // 
+  server = new Server(this, 31337); // the RPi is set to 192.168.0.100
 
   // i2c initialization
   printArray(I2C.list()); //prints available i2c buses
@@ -131,9 +136,11 @@ void draw() {
 
   background(0);
 
-  fill(255);
-  text(frameRate, 20, 20);
+  // display frameRate
+  //fill(255);
+  //text(frameRate, 20, 20);
 
+  // draw crosshairs
   //for (int i = 0; i < zone_count; i++) {
   //  zones[i].drawCrosshairs();
   //}
@@ -156,24 +163,45 @@ void network() {
   if (client !=null) {
 
     String message = client.readString();
-    // check to see if we're setting the mode
 
+    // check to see if we're setting the mode
     if (modeValid(message)) {
       setMode(message);
     } else {
-      // if not, check to see if setting speed
+
+      // if not, split the message
       String[] messages = split(message, ':');
+      //for (int i =0; i< messages.length; i++) {
+      //  println(messages[i]);
+      //}
       if (messages[0].equals("SPEED")) {
+
         speed = Float.parseFloat(messages[1]);
         //constrain speed
         speed=max(speedMin, min(speed, speedMax));
+
         //update Zone rates with new speed
+        for (int i = 0; i < zone_count; i++) {
+          if (zones[i].mode.equals("CYCLE")) {
+            zones[i].rate=speed+(freq_offset*(zones[i].ch_id-1));
+          } else {
+            zones[i].rate=speed;
+          }
+        }
+        verbose("speed set to: "+speed);
+      } else if (messages[0].equals("LEVEL")) {
+        if (messages.length==zone_count+1) { // 
+
+          for (int i = 1; i < messages.length; i++) {
+            zones[i-1].manual=Float.parseFloat(messages[i]);
+          }
+        }
+      } else if (messages[0].equals("SYNCH")) {
         for (int i = 0; i < zone_count; i++) {
           zones[i].rate=speed;
         }
-        
-        verbose("speed set to: "+speed);
       } else {
+        verbose("Unrecognized Message from Client");
       }
     }
   }

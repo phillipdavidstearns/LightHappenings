@@ -44,7 +44,6 @@ void keyPressed() {
       message="MANUAL";
       break;
     case 'K':
-      attempts=0;
       initClient(); 
       break;
     default:

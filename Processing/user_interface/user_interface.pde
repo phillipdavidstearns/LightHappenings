@@ -5,35 +5,45 @@ import processing.net.*;
 
 ControlP5 GUI;
 Client client;
-
-String ip = "192.168.0.100"; // the IP address of RPi running the light control sketch
+String ip = "127.0.0.1"; // for testing only
+//String ip = "192.168.0.100"; // the IP address of RPi running the light control sketch
 int port = 31337; // RPi is listening on this port
 
-int attempts=0;
+int qty_zones = 24;
 
-String message;
+String message=new String();
+String lastMessage=new String();
 
+
+boolean fromManSliders = false;
+String data = new String();
+
+
+Button fadeUp, fadeDown, on, off;
 RadioButton modeSelect;
 Slider speedSlider, manualSlider;
+Slider[] manualSliders;
 
 //////////////////////////////////////////////////////
 // setup()
 
 void setup() {
 
-  size(300, 400);
+  size(1200, 400);
 
   background(0);
 
+  manualSliders = new Slider[qty_zones];
+
   // initialize the client
   //initClient();
+  client = new Client(this, ip, port);
 
   // print the IP address
-  //println(client.ip());
+  println(client.ip());
 
   // GUI initialization
   initGUI();
-  
 }
 
 //////////////////////////////////////////////////////
@@ -42,22 +52,20 @@ void setup() {
 void draw() {
 
   background(0);
+  if (!lastMessage.equals(message)) {
+    client.write(message);
+  }
 
-  //if (!client.active() && attempts <=5) {
-  //  if ( attempts == 5 ) {
-  //    println("Unable to establish connection with server.");
-  //  }
-  //  attempts++;
-  //}
- 
-  //if (client.active()){
-  //  client.write(message);
-  //}
+  lastMessage=message;
 
-  //// Server can talk back.
-  //if (client.available() > 0) {
-  //  println(client.readString());
-  //}
+  if (fromManSliders) {
+    data=new String("LEVEL");
+    for (int i = 0; i < qty_zones; i++) {
+      data+=":"+manualSliders[i].getValue();
+    }
+    fromManSliders=false;
+    message=data;
+  }
 }
 
 //////////////////////////////////////////////////////
@@ -66,7 +74,7 @@ void draw() {
 void initClient() {
 
   try {
-    client = new Client(this, ip, port);
+  client = new Client(this, ip, port);
   } 
   catch (Exception e) {
   }
