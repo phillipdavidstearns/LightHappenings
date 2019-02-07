@@ -38,6 +38,8 @@ boolean I2CEnable=false;
 boolean verbose=true;
 boolean showID=false;
 boolean showBrightness=false;
+boolean particleMode=false;
+boolean waveMode=false;
 
 // I2C setup variables
 int i2c_addr_start = 10;
@@ -75,8 +77,10 @@ Table grid; // used to map the zones
 Server server;
 
 ArrayList<Lamp> lamps;
-ArrayList<Force> Forces;
-ArrayList<Wave> Waves;
+ArrayList<Force> forces;
+ArrayList<Wave> waves;
+
+int maxWaves=6;
 
 ///////////////////////////////////////////
 // Setup
@@ -85,7 +89,8 @@ void setup() {
   size(400, 150);
   background(0); 
   frameRate(30);
-  noSmooth();
+
+  //noSmooth();
 
   freq_offset=speed*.1;
 
@@ -113,6 +118,18 @@ void setup() {
   //initialize the animation
   setMode("RANDOM");
 
+  lamps = new ArrayList<Lamp>();
+  for (int i = 0; i < 5; i++) {
+    lamps.add(new Lamp());
+  }
+
+  forces = new ArrayList<Force>();
+  for (int i = 0; i < 5; i++) {
+    forces.add(new Force());
+  }
+
+  waves = new ArrayList<Wave>();
+
   //GPIO initialization for RPi
   //GPIO.pinMode(4, GPIO.OUTPUT); // GPIO 4 is physical header pin 7
 }
@@ -130,11 +147,12 @@ void setup() {
 // draw()
 
 void draw() {
+  background(0);
+
+
 
   //check network communications
   network();
-
-  background(0);
 
   // display frameRate
   //fill(255);
@@ -145,9 +163,60 @@ void draw() {
   //  zones[i].drawCrosshairs();
   //}
 
+  // update the zones
   for (int i = 0; i < zone_count; i++) {
     zones[i].render();
     zones[i].update();
+  }
+
+  if (particleMode) {
+    // update the lamps
+    for (int i = lamps.size()-1; i >=0; i--) {
+      Lamp l=lamps.get(i);
+      if (l.dead()) {
+        lamps.remove(i);
+      }
+
+      l.render();
+      l.update();
+    }
+
+    // update the forces
+    for (int i = forces.size()-1; i >=0; i--) {
+      Force f=forces.get(i);
+      if (f.dead()) {
+        forces.remove(i);
+      } else {
+
+        f.render();
+        f.update();
+      }
+    }
+
+    // apply forces to lamps
+    for (int i = 0; i < lamps.size(); i++) {
+      Lamp l = lamps.get(i);
+      for (int j = 0; j < forces.size(); j++) {
+        Force f = forces.get(j);
+        PVector force = PVector.sub(l.pos, f.pos);
+        force.setMag(-f.strength/pow(PVector.dist(l.pos, f.pos), 2));
+        l.applyForce(force);
+      }
+    }
+  }
+
+  // update waves
+  if (waveMode) {
+    for (int i = 0; i < waves.size(); i++) {
+      Wave w = waves.get(i);
+      if (w.dead()) {
+        waves.remove(i);
+      } else {
+
+        w.render();
+        w.update();
+      }
+    }
   }
 }
 
@@ -174,34 +243,62 @@ void network() {
       //for (int i =0; i< messages.length; i++) {
       //  println(messages[i]);
       //}
-      if (messages[0].equals("SPEED")) {
 
-        speed = Float.parseFloat(messages[1]);
-        //constrain speed
-        speed=max(speedMin, min(speed, speedMax));
+      switch(messages[0]) {
 
-        //update Zone rates with new speed
-        for (int i = 0; i < zone_count; i++) {
-          if (zones[i].mode.equals("CYCLE")) {
-            zones[i].rate=speed+(freq_offset*(zones[i].ch_id-1));
-          } else {
-            zones[i].rate=speed;
+      case "SPEED":
+        if (messages.length==2) {
+          speed = Float.parseFloat(messages[1]);
+          //constrain speed
+          speed=max(speedMin, min(speed, speedMax));
+
+          for (Wave w : waves) {
+            w.s=speed;
           }
-        }
-        verbose("speed set to: "+speed);
-      } else if (messages[0].equals("LEVEL")) {
-        if (messages.length==zone_count+1) { // 
 
+          //update Zone rates with new speed
+          for (int i = 0; i < zone_count; i++) {
+            if (zones[i].mode.equals("CYCLE")) {
+              zones[i].rate=speed+(freq_offset*(zones[i].ch_id-1));
+            } else {
+              zones[i].rate=speed;
+            }
+          }
+          verbose("speed set to: "+speed);
+        }
+        break;
+
+      case "LEVEL":
+        if (messages.length==zone_count+1) {
           for (int i = 1; i < messages.length; i++) {
             zones[i-1].manual=Float.parseFloat(messages[i]);
           }
         }
-      } else if (messages[0].equals("SYNCH")) {
+        break;
+
+      case "SYNCH":
         for (int i = 0; i < zone_count; i++) {
           zones[i].rate=speed;
         }
-      } else {
+        break;
+
+      case "LAMP":
+        lamps.add(new Lamp());
+        break;
+      case "FORCE":
+        forces.add(new Force());
+        break;
+
+      case "WAVE":
+
+        if (waves.size() < maxWaves && random(1) < 0.0005) {
+          waves.add(new Wave());
+        }
+        break;
+
+      default:
         verbose("Unrecognized Message from Client");
+        break;
       }
     }
   }

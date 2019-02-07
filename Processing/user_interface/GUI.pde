@@ -12,21 +12,55 @@ void initGUI() {
   int vSliderWidth=40;
   int vSliderHeight=300;
 
-  int manualSlidersX=30;
+  int manualSlidersX=40;
   int manualSlidersY=0;
   int manSlideBufferX=30;
   int manSlideBufferY=0;
 
-  int speedOffsetX=0;
+  int speedOffsetX=180;
   int speedOffsetY=0;
 
-  int manualOffsetX=160;
+  int manualOffsetX=260;
   int manualOffsetY=0;
 
-  int modeOffsetX=60;
+  int modeOffsetX=0;
   int modeOffsetY=0;
 
+  int buttonOffsetX=100;
+  int buttonOffsetY=0;
+
   GUI = new ControlP5(this);
+
+  fadeUp = GUI.addButton("up")
+    .setValue(100)
+    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY)
+    .setSize(buttonWidth, buttonHeight)
+    ;
+  fadeDown = GUI.addButton("down")
+    .setValue(100)
+    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41)
+    .setSize(buttonWidth, buttonHeight)
+    ;
+
+
+  on = GUI.addButton("on")
+    .setValue(100)
+    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*2)
+    .setSize(buttonWidth, buttonHeight)
+    ;
+  off = GUI.addButton("off")
+    .setValue(100)
+    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*3)
+    .setSize(buttonWidth, buttonHeight)
+    ;
+  wave = GUI.addButton("addwave")
+    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*4)
+    .setSize(buttonWidth, buttonHeight)
+    ;
+  random = GUI.addButton("rando")
+    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*5)
+    .setSize(buttonWidth, buttonHeight)
+    ;
 
   //speed slider
   speedSlider = GUI.addSlider("speed")
@@ -83,8 +117,26 @@ void initGUI() {
 //////////////////////////////////////////////////////
 //
 
+public void up(){
+}
+
+public void down(){
+}
+
+public void on(){
+}
+
+public void off(){
+}
+
+public void wave(){
+}
+
+public void rando(){
+}
+
 void controlEvent(ControlEvent theEvent) {
-  
+
   // event handling for the mode radio
   if (theEvent.isFrom(modeSelect)) {
     switch(int(theEvent.getValue())) {
@@ -116,13 +168,13 @@ void controlEvent(ControlEvent theEvent) {
 
   // event handling for the speed slider
   if (theEvent.isFrom(manualSlider)) {
-    
+
     for (int i = 0; i < qty_zones; i++) {
       //GUI.getController(nf(i, 2)).setValue(theValue);
       manualSliders[i].setValue(theEvent.getValue());
     }
   }
-  
+
   for (int i = 0; i < qty_zones; i++) {
     if (theEvent.isFrom(manualSliders[i])) fromManSliders = true;
   }

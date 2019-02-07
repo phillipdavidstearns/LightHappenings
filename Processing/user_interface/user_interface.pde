@@ -18,8 +18,10 @@ String lastMessage=new String();
 boolean fromManSliders = false;
 String data = new String();
 
+float master;
+float masterTarget;
 
-Button fadeUp, fadeDown, on, off;
+Button fadeUp, fadeDown, on, off, wave, random;
 RadioButton modeSelect;
 Slider speedSlider, manualSlider;
 Slider[] manualSliders;
@@ -29,7 +31,7 @@ Slider[] manualSliders;
 
 void setup() {
 
-  size(1200, 400);
+  size(1120, 400);
 
   background(0);
 

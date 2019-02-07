@@ -4,6 +4,12 @@
 void keyPressed() {
   if (key != CODED) {
     switch (key) {
+    case 'f':
+      forces.add(new Force());
+      break;
+    case 'l':
+      lamps.add(new Lamp());
+      break;
     case 'b':
       setMode("BREATHE");
       break;
@@ -15,6 +21,14 @@ void keyPressed() {
       break;
     case 'w':
       setMode("WAVES");
+      if (waves.size() < maxWaves) {
+      waves.add(new Wave());
+    }
+      break;
+    case '.':
+      if (waves.size() < maxWaves) {
+      waves.add(new Wave());
+    }
       break;
     case 'p':
       setMode("PARTICLES");

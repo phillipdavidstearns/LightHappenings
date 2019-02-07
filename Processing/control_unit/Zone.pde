@@ -23,7 +23,7 @@ class Zone {
   String mode="RANDOM";
 
   Zone(int _x, int _y, int _ch, int _id) {
-    
+
     gridX=_x;
     gridY=_y;
     pos.x=grid_offsetX+grid_padding+(gridX-1)*grid_width/(grid_unitsX)+grid_width/(grid_unitsX)/2;
@@ -31,16 +31,14 @@ class Zone {
     ch_id=_ch;
     i2c_id=_id;
     rate=speed;
-    
   }
 
   void drawCrosshairs() {
-    
+
     stroke(127);
     strokeWeight(0);
     line(pos.x, 0, pos.x, height);
     line(0, pos.y, width, pos.y);
-    
   }
 
   void render() {
@@ -50,7 +48,7 @@ class Zone {
     fill(max(0, min(brightness*255, 255)));
     rectMode(CENTER);
     rect(pos.x, pos.y, 2*r, 2*r);
-    
+
     if (showID) {
       // display channel id
       fill(255-brightness*255);
@@ -81,27 +79,29 @@ class Zone {
       bTarget = perlin();
       break;
     case "WAVES":
+      bTarget = waves();
       break;
     case "PARTICLES":
+      bTarget = particles();
       break;
     case "INTERACTIVE":
       bTarget = interactive();
       break;
     case "MANUAL":
-    bTarget = manual;
+      bTarget = manual;
       break;
     default:
       println("Unrecognized mode: "+mode);
       break;
     }
-      
-      
+
+
     // constraing brightness target 
     bTarget=max(0, min(bTarget, 1));
     // update brightness value and constraing between 0-1
     brightness+=ease(brightness, bTarget, ease);
     // send brightness down I2C wire
-    if(I2CEnable)sendI2C(byte(int(brightness*255)));
+    if (I2CEnable)sendI2C(byte(int(brightness*255)));
   }
 
 
@@ -143,32 +143,63 @@ class Zone {
     float range = grid_width/grid_unitsX;
     return 1/pow(dist/range, 2);
   }
-  
-  void incAngle(float _rate){
-    
+
+  float particles() {
+    float val=0;
+    for (int i = 0; i < lamps.size(); i++) {
+      Lamp l = lamps.get(i);
+      float dist = PVector.dist(pos, l.pos);
+      float range = grid_width/grid_unitsX;
+      val+=l.strength/pow(dist/range, 2);
+    }
+    return val;
+  }
+
+  float waves() {
+
+    if (waves.size() < maxWaves && random(1) < 0.001) {
+      waves.add(new Wave());
+    }
+
+    float val=0;
+    for (int i = 0; i < waves.size(); i++) {
+      Wave w = waves.get(i);
+      float dist = PVector.dist(pos, w.pos)-w.r;
+      float range = grid_width/grid_unitsX;
+      val+=1/pow(dist/range,2);
+    }
+    return val;
+  }
+
+  void incAngle(float _rate) {
+
     //increment angle by rate
     angle+=_rate;
-    
+
     //wrap to constrain to 0-1
     if ( angle > 1) {
       angle = angle-1;
     } else if (angle < 0) {
       angle = 1+angle;
     }
-    
   }
 
   void setMode(String _mode) {
-    
+
     mode=_mode;
-    
+
     switch(mode) {
     case "BREATHE":
+      particleMode=false;
+      waveMode=false;
       angle=0;
       rate=speed;
+
       break;
-      
+
     case "RANDOM":
+      particleMode=false;
+      waveMode=false;
       noiseSeed(seed);
       noiseDetail(3, .75);
       angle=(random(1));
@@ -176,19 +207,29 @@ class Zone {
       break;
 
     case "CYCLE":
+      particleMode=false;
+      waveMode=false;
       rate=speed+(freq_offset*(ch_id-1));
       break;
 
     case "INTERACTIVE":
+      particleMode=false;
+      waveMode=false;
       break;
 
     case "MANUAL":
+      particleMode=false;
+      waveMode=false;
       break;
 
     case "WAVES":
+      particleMode=false;
+      waveMode=true;
       break;
 
     case "PARTICLES":
+      particleMode=true;
+      waveMode=false;
       break;
 
     default:
