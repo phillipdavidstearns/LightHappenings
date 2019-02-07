@@ -42,7 +42,6 @@ void initGUI() {
     .setSize(buttonWidth, buttonHeight)
     ;
 
-
   on = GUI.addButton("on")
     .setValue(100)
     .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*2)
@@ -71,32 +70,45 @@ void initGUI() {
     ;
 
   // manual brightness slider
-  manualSlider = GUI.addSlider("master")
+  manualSlider = GUI.addSlider("manual")
     .setPosition(GUIoriginX+manualOffsetX, GUIoriginY+manualOffsetY)
     .setSize(vSliderWidth, vSliderHeight)
     .setRange(0, 1) // values can range from big to small as well
     .setValue(0)
     ;
-  GUI.getController("master")
+  GUI.getController("manual")
+    .getValueLabel()
+    .align(ControlP5.CENTER, ControlP5.TOP_OUTSIDE)
+    .setPaddingX(0)
+    ;
+    
+    // indicates the level of the manual light settings
+    manualLevel = GUI.addSlider("level")
+    .setPosition(GUIoriginX+manualOffsetX+60, GUIoriginY+manualOffsetY)
+    .setSize(vSliderWidth, vSliderHeight)
+    .setRange(0, 1) // values can range from big to small as well
+    .setValue(0)
+    ;
+  GUI.getController("level")
     .getValueLabel()
     .align(ControlP5.CENTER, ControlP5.TOP_OUTSIDE)
     .setPaddingX(0)
     ;
 
-  // manual brightness slider
-  for (int i = 0; i < qty_zones; i++) {
-    manualSliders[i] = GUI.addSlider(nf(i, 2))
-      .setPosition(GUIoriginX+manualOffsetX+manualSlidersX+(manSlideBufferX*(1+i)), GUIoriginY+manualOffsetY+manualSlidersY+manSlideBufferY)
-      .setSize(vSliderWidth/2, vSliderHeight)
-      .setRange(0, 1) // values can range from big to small as well
-      .setValue(0)
-      ;
-    GUI.getController(nf(i, 2))
-      .getValueLabel()
-      .align(ControlP5.CENTER, ControlP5.TOP_OUTSIDE)
-      .setPaddingX(0)
-      ;
-  }
+  //// manual brightness slider
+  //for (int i = 0; i < qty_zones; i++) {
+  //  manualSliders[i] = GUI.addSlider(nf(i, 2))
+  //    .setPosition(GUIoriginX+manualOffsetX+manualSlidersX+(manSlideBufferX*(1+i)), GUIoriginY+manualOffsetY+manualSlidersY+manSlideBufferY)
+  //    .setSize(vSliderWidth/2, vSliderHeight)
+  //    .setRange(0, 1) // values can range from big to small as well
+  //    .setValue(0)
+  //    ;
+  //  GUI.getController(nf(i, 2))
+  //    .getValueLabel()
+  //    .align(ControlP5.CENTER, ControlP5.TOP_OUTSIDE)
+  //    .setPaddingX(0)
+  //    ;
+  //}
 
   modeSelect = GUI.addRadioButton("modeSelect")
     .setPosition(GUIoriginX+modeOffsetX, GUIoriginY+modeOffsetY)
@@ -118,21 +130,39 @@ void initGUI() {
 //
 
 public void up(){
+  if(manualSlider.getValue() < 1){
+    manualSlider.setValue(manualSlider.getValue()+0.1);
+  } else if (manualSlider.getValue() > 1) {
+    manualSlider.setValue(1);
+  }
 }
 
 public void down(){
+  if(manualSlider.getValue() > 0){
+    manualSlider.setValue(manualSlider.getValue()-0.1);
+  } else if (manualSlider.getValue() < 0) {
+    manualSlider.setValue(0);
+  }
 }
 
 public void on(){
+  //masterTarget=1;
+  manualSlider.setValue(1);
 }
 
 public void off(){
+  //masterTarget=0;
+  manualSlider.setValue(0);
 }
 
 public void wave(){
+  message="WAVE";
 }
 
 public void rando(){
+  manualSlider.setValue(random(1));
+  modeSelect.setValue(int(random(6)+1));
+  speedSlider.setValue(random(.0025,.025));
 }
 
 void controlEvent(ControlEvent theEvent) {
@@ -141,44 +171,34 @@ void controlEvent(ControlEvent theEvent) {
   if (theEvent.isFrom(modeSelect)) {
     switch(int(theEvent.getValue())) {
     case 1:
-      message="BREATHE";
+      client.write("BREATHE");
       break;
     case 2:
-      message="CYCLE";
+      client.write("CYCLE");
       break;
     case 3:
-      message="RANDOM";
+      client.write("RANDOM");
       break;
     case 4:
-      message="PARTICLES";
+      client.write("PARTICLES");
       break;
     case 5:
-      message="WAVES";
+      client.write("WAVES");
       break;
     case 6:
-      message="MANUAL";
+      client.write("MANUAL");
       break;
     }
   }
 
   // event handling for the speed slider
   if (theEvent.isFrom(speedSlider)) {
-    message="SPEED:"+theEvent.getValue();
+    client.write("SPEED:"+theEvent.getValue());
   }
 
   // event handling for the speed slider
   if (theEvent.isFrom(manualSlider)) {
-
-    for (int i = 0; i < qty_zones; i++) {
-      //GUI.getController(nf(i, 2)).setValue(theValue);
-      manualSliders[i].setValue(theEvent.getValue());
-    }
+    masterTarget=manualSlider.getValue();
   }
 
-  for (int i = 0; i < qty_zones; i++) {
-    if (theEvent.isFrom(manualSliders[i])) fromManSliders = true;
-  }
-
-  //println(theEvent);
-  //if (message != null) println("Message is: "+message);
 }

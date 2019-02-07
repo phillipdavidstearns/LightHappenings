@@ -10,6 +10,12 @@
  *****************************************************************************
  run this command from the Raspberry Pi command line to execute:
  processing-java --sketch=/home/pi/Documents/USM/LightHappenings/Processing/control_unit/ --force --run
+ 
+ to load at boot:
+ ~/.config/lxsession/LXDE-pi/autostart
+ 
+ add line:
+ /usr/local/bin/processing-java --sketch=/home/pi/Documents/USM/LightHappenings/Processing/control_unit/ --force --run
  *****************************************************************************
  
  Written by Phillip David Stearns 2019
@@ -32,10 +38,10 @@ Zone[] zones;
 
 //********************
 // ENABLE FOR I2C
-boolean I2CEnable=false;
+boolean I2CEnable=true;
 //********************
 
-boolean verbose=true;
+boolean verbose=false;
 boolean showID=false;
 boolean showBrightness=false;
 boolean particleMode=false;
@@ -233,6 +239,8 @@ void network() {
 
     String message = client.readString();
 
+    println(message);
+
     // check to see if we're setting the mode
     if (modeValid(message)) {
       setMode(message);
@@ -248,7 +256,12 @@ void network() {
 
       case "SPEED":
         if (messages.length==2) {
-          speed = Float.parseFloat(messages[1]);
+          try {
+            speed = Float.parseFloat(messages[1]);
+          } 
+          catch(Exception e) {
+          }
+
           //constrain speed
           speed=max(speedMin, min(speed, speedMax));
 
@@ -264,14 +277,18 @@ void network() {
               zones[i].rate=speed;
             }
           }
-          verbose("speed set to: "+speed);
         }
         break;
 
       case "LEVEL":
-        if (messages.length==zone_count+1) {
-          for (int i = 1; i < messages.length; i++) {
-            zones[i-1].manual=Float.parseFloat(messages[i]);
+
+        if (messages.length==2) {
+          for (int i = 0; i < zone_count; i++) {
+            try {
+              zones[i].manual=Float.parseFloat(messages[1]);
+            } 
+            catch(Exception e) {
+            }
           }
         }
         break;
@@ -285,19 +302,21 @@ void network() {
       case "LAMP":
         lamps.add(new Lamp());
         break;
+
       case "FORCE":
         forces.add(new Force());
         break;
 
       case "WAVE":
-
         if (waves.size() < maxWaves && random(1) < 0.0005) {
           waves.add(new Wave());
         }
         break;
 
       default:
+
         verbose("Unrecognized Message from Client");
+        println(message);
         break;
       }
     }

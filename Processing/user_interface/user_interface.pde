@@ -5,8 +5,8 @@ import processing.net.*;
 
 ControlP5 GUI;
 Client client;
-String ip = "127.0.0.1"; // for testing only
-//String ip = "192.168.0.100"; // the IP address of RPi running the light control sketch
+//String ip = "127.0.0.1"; // for testing only
+String ip = "192.168.0.100"; // the IP address of RPi running the light control sketch
 int port = 31337; // RPi is listening on this port
 
 int qty_zones = 24;
@@ -15,27 +15,27 @@ String message=new String();
 String lastMessage=new String();
 
 
-boolean fromManSliders = false;
+boolean targetReached = false;
 String data = new String();
 
+float manual;
 float master;
 float masterTarget;
 
 Button fadeUp, fadeDown, on, off, wave, random;
 RadioButton modeSelect;
-Slider speedSlider, manualSlider;
-Slider[] manualSliders;
+Slider speedSlider, manualSlider, manualLevel;
+
 
 //////////////////////////////////////////////////////
 // setup()
 
 void setup() {
 
-  size(1120, 400);
+  size(450, 400);
 
   background(0);
 
-  manualSliders = new Slider[qty_zones];
 
   // initialize the client
   //initClient();
@@ -46,6 +46,7 @@ void setup() {
 
   // GUI initialization
   initGUI();
+  frameRate(30);
 }
 
 //////////////////////////////////////////////////////
@@ -53,20 +54,25 @@ void setup() {
 
 void draw() {
 
-  background(0);
-  if (!lastMessage.equals(message)) {
-    client.write(message);
-  }
+  background(0); 
 
-  lastMessage=message;
+  if (modeSelect.getValue() == 6) {
 
-  if (fromManSliders) {
-    data=new String("LEVEL");
-    for (int i = 0; i < qty_zones; i++) {
-      data+=":"+manualSliders[i].getValue();
+    float delta = masterTarget - master;
+    
+    if (abs(delta) < .01) master = masterTarget;
+
+    master += delta * 0.025;
+    
+    manualLevel.setValue(master);
+    
+    message="LEVEL:"+master;
+    
+    if (!lastMessage.equals(message)) {
+      client.write(message);
     }
-    fromManSliders=false;
-    message=data;
+    
+    lastMessage=message;
   }
 }
 
@@ -76,7 +82,7 @@ void draw() {
 void initClient() {
 
   try {
-  client = new Client(this, ip, port);
+    client = new Client(this, ip, port);
   } 
   catch (Exception e) {
   }
