@@ -31,17 +31,23 @@ void initGUI() {
 
   GUI = new ControlP5(this);
 
-  fadeUp = GUI.addButton("up")
-    .setValue(100)
-    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY)
-    .setSize(buttonWidth, buttonHeight)
-    ;
-  fadeDown = GUI.addButton("down")
-    .setValue(100)
-    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41)
-    .setSize(buttonWidth, buttonHeight)
-    ;
+  //fadeUp = GUI.addButton("up")
+  //  .setValue(100)
+  //  .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY)
+  //  .setSize(buttonWidth, buttonHeight)
+  //  ;
+  //fadeDown = GUI.addButton("down")
+  //  .setValue(100)
+  //  .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41)
+  //  .setSize(buttonWidth, buttonHeight)
+  //  ;
 
+  autoToggle = GUI.addToggle("autoToggle")
+     .setValue(false)
+     .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*0)
+     .setSize(buttonWidth, buttonHeight)
+     ;
+     
   on = GUI.addButton("on")
     .setValue(100)
     .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*2)
@@ -52,14 +58,16 @@ void initGUI() {
     .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*3)
     .setSize(buttonWidth, buttonHeight)
     ;
+    
   wave = GUI.addButton("addwave")
     .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*4)
     .setSize(buttonWidth, buttonHeight)
     ;
-  random = GUI.addButton("rando")
-    .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*5)
-    .setSize(buttonWidth, buttonHeight)
-    ;
+    
+  //random = GUI.addButton("rando")
+  //  .setPosition(GUIoriginX+modeOffsetX+buttonOffsetX, GUIoriginY+modeOffsetY+buttonOffsetY+41*5)
+  //  .setSize(buttonWidth, buttonHeight)
+  //  ;
 
   //speed slider
   speedSlider = GUI.addSlider("speed")
@@ -83,11 +91,11 @@ void initGUI() {
     ;
     
     // indicates the level of the manual light settings
-    manualLevel = GUI.addSlider("level")
+  manualLevel = GUI.addSlider("level")
     .setPosition(GUIoriginX+manualOffsetX+60, GUIoriginY+manualOffsetY)
     .setSize(vSliderWidth, vSliderHeight)
     .setRange(0, 1) // values can range from big to small as well
-    .setValue(0)
+    .setValue(1)
     ;
   GUI.getController("level")
     .getValueLabel()
@@ -124,46 +132,50 @@ void initGUI() {
     .addItem("WAVES", 5)
     .addItem("MANUAL", 6)
     ;
+    
+    println("GUI Initialized");
 }
 
 //////////////////////////////////////////////////////
 //
 
-public void up(){
-  if(manualSlider.getValue() < 1){
-    manualSlider.setValue(manualSlider.getValue()+0.1);
-  } else if (manualSlider.getValue() > 1) {
-    manualSlider.setValue(1);
-  }
+public void autoToggle(boolean theFlag) {
+  auto=theFlag;
 }
 
-public void down(){
-  if(manualSlider.getValue() > 0){
-    manualSlider.setValue(manualSlider.getValue()-0.1);
-  } else if (manualSlider.getValue() < 0) {
-    manualSlider.setValue(0);
-  }
-}
+//public void up(){
+//  if(manualSlider.getValue() < 1){
+//    manualSlider.setValue(manualSlider.getValue()+0.1);
+//  } else if (manualSlider.getValue() > 1) {
+//    manualSlider.setValue(1);
+//  }
+//}
+
+//public void down(){
+//  if(manualSlider.getValue() > 0){
+//    manualSlider.setValue(manualSlider.getValue()-0.1);
+//  } else if (manualSlider.getValue() < 0) {
+//    manualSlider.setValue(0);
+//  }
+//}
 
 public void on(){
-  //masterTarget=1;
-  manualSlider.setValue(1);
+  manualSlider.setValue(1.0);
 }
 
 public void off(){
-  //masterTarget=0;
-  manualSlider.setValue(0);
+  manualSlider.setValue(0.0);
 }
 
 public void wave(){
   message="WAVE";
 }
 
-public void rando(){
-  manualSlider.setValue(random(1));
-  modeSelect.setValue(int(random(6)+1));
-  speedSlider.setValue(random(.0025,.025));
-}
+//public void rando(){
+//  manualSlider.setValue(random(1));
+//  modeSelect.setValue(int(random(6)+1));
+//  speedSlider.setValue(random(.0025,.025));
+//}
 
 void controlEvent(ControlEvent theEvent) {
 

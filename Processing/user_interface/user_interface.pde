@@ -16,16 +16,18 @@ String lastMessage=new String();
 
 
 boolean targetReached = false;
+boolean auto=false;
 String data = new String();
+int loop;
 
 float manual;
-float master;
-float masterTarget;
+float master=1;
+float masterTarget=1;
 
 Button fadeUp, fadeDown, on, off, wave, random;
 RadioButton modeSelect;
 Slider speedSlider, manualSlider, manualLevel;
-
+Toggle autoToggle;
 
 //////////////////////////////////////////////////////
 // setup()
@@ -47,6 +49,7 @@ void setup() {
   // GUI initialization
   initGUI();
   frameRate(30);
+ 
 }
 
 //////////////////////////////////////////////////////
@@ -59,21 +62,34 @@ void draw() {
   if (modeSelect.getValue() == 6) {
 
     float delta = masterTarget - master;
-    
-    if (abs(delta) < .01) master = masterTarget;
 
-    master += delta * 0.025;
+    if (abs(delta) < .01) masterTarget = master;
+    
+    master += delta * 0.05;
     
     manualLevel.setValue(master);
-    
+
     message="LEVEL:"+master;
-    
+
     if (!lastMessage.equals(message)) {
       client.write(message);
     }
-    
+
     lastMessage=message;
   }
+  
+  if (auto) {
+    //println(frameCount % 100);
+    if (frameCount % 5400 == 0) {
+      loop++;
+      loop%=5;
+      println(loop);
+      float[] values = new float[6];
+      values[loop]=1;
+      modeSelect.setArrayValue(values);
+    }
+  }
+  
 }
 
 //////////////////////////////////////////////////////
