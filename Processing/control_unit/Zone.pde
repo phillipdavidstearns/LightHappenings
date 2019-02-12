@@ -22,6 +22,7 @@ class Zone {
   float noiseScale=1500;
   String mode="RANDOM";
 
+  // constructor
   Zone(int _x, int _y, int _ch, int _id) {
 
     gridX=_x;
@@ -34,7 +35,7 @@ class Zone {
   }
 
   void drawCrosshairs() {
-
+    // draw crosshairs at center of Zone
     stroke(127);
     strokeWeight(0);
     line(pos.x, 0, pos.x, height);
@@ -95,7 +96,6 @@ class Zone {
       break;
     }
 
-
     // constraing brightness target 
     bTarget=max(0, min(bTarget, 1));
     // update brightness value and constraing between 0-1
@@ -103,7 +103,6 @@ class Zone {
     // send brightness down I2C wire
     if (I2CEnable)sendI2C(byte(int(brightness*255)));
   }
-
 
   // send value to I2C device, if transmission fails, soldier on.
   void sendI2C(byte _val) {
@@ -122,21 +121,25 @@ class Zone {
     return (_target - _val) * _amt;
   }
 
+  // CYCLE mode
   float cycle() {
     incAngle(rate);
     return 0.5 * sin(2*PI*angle) + 0.5;
   }
 
+  // BREATHE mode
   float breathe() {
     incAngle(rate);
     return pow(sin(2*PI*angle), 2);
   }
 
+  // RANDOM mode
   float perlin() {
     incAngle(rate/noiseScale);
     return 2*noise(noiseScale*sin(2*PI*angle))-0.5;
   }
 
+  // INTERACTIVE mode
   float interactive() {
     PVector mouse = new PVector(mouseX, mouseY);
     float dist = PVector.dist(pos, mouse);
@@ -144,6 +147,7 @@ class Zone {
     return 1/pow(dist/range, 2);
   }
 
+  // PARTICLES mode
   float particles() {
     float val=0;
     for (int i = 0; i < lamps.size(); i++) {
@@ -155,6 +159,7 @@ class Zone {
     return val;
   }
 
+  // WAVES mode
   float waves() {
 
     if (waves.size() < maxWaves && random(1) < 0.001) {
@@ -166,16 +171,15 @@ class Zone {
       Wave w = waves.get(i);
       float dist = PVector.dist(pos, w.pos)-w.r;
       float range = grid_width/grid_unitsX;
-      val+=1/pow(dist/range,2);
+      val+=1/pow(dist/range, 2);
     }
     return val;
   }
 
-  void incAngle(float _rate) {
 
+  void incAngle(float _rate) {
     //increment angle by rate
     angle+=_rate;
-
     //wrap to constrain to 0-1
     if ( angle > 1) {
       angle = angle-1;
@@ -189,12 +193,12 @@ class Zone {
     mode=_mode;
 
     switch(mode) {
+
     case "BREATHE":
       particleMode=false;
       waveMode=false;
       angle=0;
       rate=speed;
-
       break;
 
     case "RANDOM":
@@ -233,6 +237,7 @@ class Zone {
       break;
 
     default:
+      println("Unrecognized mode: "+mode);
       break;
     }
   }

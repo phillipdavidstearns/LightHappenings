@@ -16,12 +16,12 @@ class Lamp {
   
   Lamp() {
     pos = new PVector(random(width),random(height));
-    vel = new PVector(random(-2, 2), random(-2, 2)); //may comment out 
+    vel = new PVector(random(-2, 2), random(-2, 2));
   }
 
   Lamp(float _x, float _y) {
     pos = new PVector(_x, _y);
-    vel = new PVector(random(-2, 2), random(-2, 2)); //may comment out 
+    vel = new PVector(random(-2, 2), random(-2, 2));
   }
   
   Lamp(float _x, float _y, float _strength) {
@@ -44,6 +44,7 @@ class Lamp {
     //velocity is the rate of change of location
     pos.add(vel);
     
+    // wrap the particles around the screen
     wrap();
 
     //zero out the forces
@@ -75,5 +76,37 @@ class Lamp {
   
   boolean dead() {
     return age > lifespan;
+  }
+}
+
+///////////////////////////////////////////
+// updateLamps
+
+void updateLamps(){
+// update the lamps
+  for (int i = lamps.size()-1; i >=0; i--) {
+    Lamp l=lamps.get(i);
+    if (l.dead()) {
+      lamps.remove(i);
+    }
+
+    l.render();
+    l.update();
+  }
+}
+
+///////////////////////////////////////////
+// applyForcesToLamps()
+
+void applyForcesToLamps(){
+  // apply forces to lamps
+  for (int i = 0; i < lamps.size(); i++) {
+    Lamp l = lamps.get(i);
+    for (int j = 0; j < forces.size(); j++) {
+      Force f = forces.get(j);
+      PVector force = PVector.sub(l.pos, f.pos);
+      force.setMag(-f.strength/pow(PVector.dist(l.pos, f.pos), 2));
+      l.applyForce(force);
+    }
   }
 }

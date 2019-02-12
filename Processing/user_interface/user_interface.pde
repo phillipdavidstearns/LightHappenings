@@ -1,19 +1,20 @@
 import controlP5.*;
 import processing.net.*; 
 
-
-
+// .controlP5 Object for GUI
 ControlP5 GUI;
+// .net Client Object 
 Client client;
-//String ip = "127.0.0.1"; // for testing only
+
+//String ip = "127.0.0.1"; // for testing both control and interface on localhost only
 String ip = "192.168.0.100"; // the IP address of RPi running the light control sketch
 int port = 31337; // RPi is listening on this port
 
+//number of zones
 int qty_zones = 24;
 
 String message=new String();
 String lastMessage=new String();
-
 
 boolean targetReached = false;
 boolean auto=false;
@@ -24,6 +25,7 @@ float manual;
 float master=1;
 float masterTarget=1;
 
+// controlP5 GUI Objects
 Button fadeUp, fadeDown, on, off, wave, random;
 RadioButton modeSelect;
 Slider speedSlider, manualSlider, manualLevel;
@@ -38,10 +40,9 @@ void setup() {
 
   background(0);
 
-
   // initialize the client
-  //initClient();
-  client = new Client(this, ip, port);
+  initClient();
+  //client = new Client(this, ip, port);
 
   // print the IP address
   println(client.ip());
@@ -89,7 +90,7 @@ void draw() {
       modeSelect.setArrayValue(values);
     }
   }
-  
+
 }
 
 //////////////////////////////////////////////////////
@@ -103,6 +104,3 @@ void initClient() {
   catch (Exception e) {
   }
 }
-
-//////////////////////////////////////////////////////
-//

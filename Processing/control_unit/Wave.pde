@@ -39,6 +39,22 @@ class Wave {
   }
 
   boolean dead() {
+    // true if the radius is greater than the max
     return r > rMax;
+  }
+}
+
+///////////////////////////////////////////
+// updateWaves()
+
+void updateWaves() {
+  for (int i = 0; i < waves.size(); i++) {
+    Wave w = waves.get(i);
+    if (w.dead()) {
+      waves.remove(i);
+    } else {
+      w.render();
+      w.update();
+    }
   }
 }

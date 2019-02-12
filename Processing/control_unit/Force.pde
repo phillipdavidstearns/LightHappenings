@@ -40,7 +40,7 @@ class Force {
   }
   
   void incAngle(float _rate){
-    
+  
     //increment angle by rate
     angle+=_rate;
     
@@ -61,4 +61,23 @@ class Force {
     return age > lifespan;
   }
   
+}
+
+///////////////////////////////////////////
+// updateForces()
+
+void updateForces() {
+  
+
+  // update the forces
+  for (int i = forces.size()-1; i >=0; i--) {
+    Force f=forces.get(i);
+    if (f.dead()) {
+      forces.remove(i);
+    } else {
+
+      f.render();
+      f.update();
+    }
+  }
 }

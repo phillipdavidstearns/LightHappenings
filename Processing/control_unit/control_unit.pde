@@ -1,4 +1,4 @@
-/*//////////////////////////////////////////
+/**
  
  A Skeletal Sketch for USM Control Unit
  
@@ -15,7 +15,7 @@
  ~/.config/lxsession/LXDE-pi/autostart
  
  add line:
- /usr/local/bin/processing-java --sketch=/home/pi/Documents/USM/LightHappenings/Processing/control_unit/ --force --run
+ @/usr/local/bin/processing-java --sketch=/home/pi/Documents/USM/LightHappenings/Processing/control_unit/ --force --run
  *****************************************************************************
  
  Written by Phillip David Stearns 2019
@@ -23,7 +23,9 @@
  No lincenses and No warranties are granted.
  Reuse this code at your own peril.
  
- //////////////////////////////////////////*/
+ */
+
+///////////////////////////////////////////
 //Libraries
 
 import processing.net.*;
@@ -32,45 +34,39 @@ import processing.io.*;
 ///////////////////////////////////////////
 // Global variables
 
+// networking Objects
+Server server;
+
+// I2C Object and related variables
 I2C i2c;
-
-Zone[] zones;
-
 //********************
 // ENABLE FOR I2C
 boolean I2CEnable=true;
 //********************
+int i2c_addr_start = 10;
 
+// Array of Zone Objects and related variables
+Zone[] zones;
+int zone_count = 24;
+
+// switches for debugging
 boolean verbose=false;
 boolean showID=false;
 boolean showBrightness=false;
+
+// switches for different modes
 boolean particleMode=false;
 boolean waveMode=false;
 
-// I2C setup variables
-int i2c_addr_start = 10;
-int zone_count = 24;
-
-
 // Misc global variables
-float speed = .005; // speed of animaiton
+float speed = .005; // speed of animation
 float speedMin=.0025;
 float speedMax=.025;
 float freq_offset; // used to determin the frequency offset of the CYCLE routine
-float[] manual;
+int maxWaves=6; // max nuber of waves that can be active
 
-/*
-  Supported modes/animation routines:
- CYCLE        Sets each Zone to the global speed + and offset
- BREATH       Sets all zones to the global speed
- RANDOM       Randomizes the 
- WAVES
- INTERACTIVE
- MANUAL
- PARTICLES
- */
 
-// variables for establishing the grid
+// variables for establishing the grid of Zones
 float grid_padding=20;
 int grid_unitsX=15;
 int grid_unitsY=4;
@@ -80,25 +76,19 @@ float grid_offsetX;
 float grid_offsetY;
 Table grid; // used to map the zones
 
-Server server;
-
-ArrayList<Lamp> lamps;
-ArrayList<Force> forces;
-ArrayList<Wave> waves;
-
-int maxWaves=6;
+// ArrayLists of Objects for particle systems
+ArrayList<Lamp> lamps; // force directed light sources
+ArrayList<Force> forces; // forces that move lights
+ArrayList<Wave> waves; // an expanding circle that turns on Zones it passes
 
 ///////////////////////////////////////////
 // Setup
 
 void setup() {
-  size(400, 150);
+
+  size(800, 300);
   background(0); 
   frameRate(30);
-
-  //noSmooth();
-
-  freq_offset=speed*.1;
 
   // initialize server
   server = new Server(this, 31337); // the RPi is set to 192.168.0.100
@@ -114,29 +104,38 @@ void setup() {
   grid_offsetY = (height-grid_height)/2-grid_padding;
   grid=loadTable("grid.txt", "csv"); // grid.txt must be in project folder
 
+  // calculate constant for cycle rate offset
+  freq_offset=speed*.1;
+
   // initialize zones
   zones = new Zone[zone_count];
   for (int i = 0; i < zone_count; i++) {
+    // get the row of the grid table
     TableRow row = grid.getRow(i);
+    // assign the values to the x and y grid coordinatates of a new Zone
+    // set I2C  and channel ID
     zones[i]=new Zone(parseInt(row.getString(0)), parseInt(row.getString(1)), i+1, i+i2c_addr_start);
   }
 
   //initialize the animation
   setMode("RANDOM");
 
+  // create new Lamps and add to ArrayList
   lamps = new ArrayList<Lamp>();
   for (int i = 0; i < 5; i++) {
     lamps.add(new Lamp());
   }
 
+  // create new Forces and add to ArrayList
   forces = new ArrayList<Force>();
   for (int i = 0; i < 5; i++) {
     forces.add(new Force());
   }
 
+  // initialize ArrayList of Waves
   waves = new ArrayList<Wave>();
 
-  //GPIO initialization for RPi
+  // GPIO initialization for RPi to reset ATTiny85s if frozen
   //GPIO.pinMode(4, GPIO.OUTPUT); // GPIO 4 is physical header pin 7
 }
 
@@ -155,8 +154,6 @@ void setup() {
 void draw() {
   background(0);
 
-
-
   //check network communications
   network();
 
@@ -174,157 +171,22 @@ void draw() {
     zones[i].render();
     zones[i].update();
   }
-
-  if (particleMode) {
-    // update the lamps
-    for (int i = lamps.size()-1; i >=0; i--) {
-      Lamp l=lamps.get(i);
-      if (l.dead()) {
-        lamps.remove(i);
-      }
-
-      l.render();
-      l.update();
-    }
-
-    // update the forces
-    for (int i = forces.size()-1; i >=0; i--) {
-      Force f=forces.get(i);
-      if (f.dead()) {
-        forces.remove(i);
-      } else {
-
-        f.render();
-        f.update();
-      }
-    }
-
-    // apply forces to lamps
-    for (int i = 0; i < lamps.size(); i++) {
-      Lamp l = lamps.get(i);
-      for (int j = 0; j < forces.size(); j++) {
-        Force f = forces.get(j);
-        PVector force = PVector.sub(l.pos, f.pos);
-        force.setMag(-f.strength/pow(PVector.dist(l.pos, f.pos), 2));
-        l.applyForce(force);
-      }
-    }
+  
+  // update the particle system
+  if (particleMode){
+    updateLamps();
+    updateForces();
+    applyForcesToLamps();
   }
 
   // update waves
-  if (waveMode) {
-    for (int i = 0; i < waves.size(); i++) {
-      Wave w = waves.get(i);
-      if (w.dead()) {
-        waves.remove(i);
-      } else {
-
-        w.render();
-        w.update();
-      }
-    }
-  }
-}
-
-///////////////////////////////////////////
-// network()
-
-void network() {
-
-  // Get the next available client
-  Client client = server.available();
-
-  // If the client is not null, and says something, display what it said
-  if (client !=null) {
-
-    String message = client.readString();
-
-    println(message);
-
-    // check to see if we're setting the mode
-    if (modeValid(message)) {
-      setMode(message);
-    } else {
-
-      // if not, split the message
-      String[] messages = split(message, ':');
-      //for (int i =0; i< messages.length; i++) {
-      //  println(messages[i]);
-      //}
-
-      switch(messages[0]) {
-
-      case "SPEED":
-        if (messages.length==2) {
-          try {
-            speed = Float.parseFloat(messages[1]);
-          } 
-          catch(Exception e) {
-          }
-
-          //constrain speed
-          speed=max(speedMin, min(speed, speedMax));
-
-          for (Wave w : waves) {
-            w.s=speed;
-          }
-
-          //update Zone rates with new speed
-          for (int i = 0; i < zone_count; i++) {
-            if (zones[i].mode.equals("CYCLE")) {
-              zones[i].rate=speed+(freq_offset*(zones[i].ch_id-1));
-            } else {
-              zones[i].rate=speed;
-            }
-          }
-        }
-        break;
-
-      case "LEVEL":
-
-        if (messages.length==2) {
-          for (int i = 0; i < zone_count; i++) {
-            try {
-              zones[i].manual=Float.parseFloat(messages[1]);
-            } 
-            catch(Exception e) {
-            }
-          }
-        }
-        break;
-
-      case "SYNCH":
-        for (int i = 0; i < zone_count; i++) {
-          zones[i].rate=speed;
-        }
-        break;
-
-      case "LAMP":
-        lamps.add(new Lamp());
-        break;
-
-      case "FORCE":
-        forces.add(new Force());
-        break;
-
-      case "WAVE":
-        if (waves.size() < maxWaves && random(1) < 0.0005) {
-          waves.add(new Wave());
-        }
-        break;
-
-      default:
-
-        verbose("Unrecognized Message from Client");
-        println(message);
-        break;
-      }
-    }
-  }
+  if (waveMode) updateWaves();
+  
 }
 
 ///////////////////////////////////////////
 // modeValid()
+
 boolean modeValid(String _message) {
   return (
     _message != null && (
